@@ -223,7 +223,7 @@ export const ChatPreview = () => {
         <Input
           value={emailInput}
           onChange={(e) => setEmailInput(e.target.value)}
-          placeholder="Seu email..."
+          placeholder="Your email..."
           type="email"
           disabled={isLoading}
           className="bg-card border-border text-foreground placeholder:text-muted-foreground"

@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Bot, Send, Link2 } from "lucide-react";
+import { Bot, Send, Link2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import { sendPrompt, isValidEmail, isValidPrompt } from "@/lib/api";
 
 interface Message {
   id: string;
@@ -35,10 +37,49 @@ const initialMessages: Message[] = [
 export const ChatPreview = () => {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [inputValue, setInputValue] = useState("");
+  const [emailInput, setEmailInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
-  const handleSend = () => {
-    if (!inputValue.trim()) return;
+  const handleSend = async () => {
+    // Validação
+    if (!inputValue.trim()) {
+      toast({
+        title: "Erro",
+        description: "Por favor, digite uma mensagem",
+        variant: "destructive",
+      });
+      return;
+    }
 
+    if (!isValidPrompt(inputValue)) {
+      toast({
+        title: "Erro",
+        description: "A mensagem deve ter entre 1 e 5000 caracteres",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!emailInput.trim()) {
+      toast({
+        title: "Erro",
+        description: "Por favor, informe seu email",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!isValidEmail(emailInput)) {
+      toast({
+        title: "Erro",
+        description: "Por favor, informe um email válido",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Adiciona mensagem do usuário
     const newMessage: Message = {
       id: Date.now().toString(),
       content: inputValue,
@@ -48,17 +89,38 @@ export const ChatPreview = () => {
 
     setMessages((prev) => [...prev, newMessage]);
     setInputValue("");
+    setIsLoading(true);
 
-    // Simulate agent response
-    setTimeout(() => {
+    try {
+      // Chamada ao backend
+      const response = await sendPrompt(inputValue, emailInput);
+
+      // Adiciona resposta do agente
       const agentResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        content: "I understand your question. Let me help you with that. Is there anything specific you'd like to know?",
+        id: response.id,
+        content: response.content,
         sender: "agent",
         timestamp: "Just now",
       };
       setMessages((prev) => [...prev, agentResponse]);
-    }, 1000);
+
+      toast({
+        title: "Sucesso",
+        description: "Mensagem processada com sucesso",
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
+      toast({
+        title: "Erro",
+        description: errorMessage,
+        variant: "destructive",
+      });
+
+      // Remove a mensagem do usuário em caso de erro
+      setMessages((prev) => prev.slice(0, -1));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleReset = () => {
@@ -143,23 +205,49 @@ export const ChatPreview = () => {
             )}
           </div>
         ))}
+        {isLoading && (
+          <div className="flex gap-2 items-center">
+            <div className="w-6 h-6 rounded-md bg-primary/20 flex items-center justify-center">
+              <Bot className="w-3 h-3 text-primary" />
+            </div>
+            <div className="flex gap-1">
+              <div className="w-2 h-2 rounded-full bg-primary animate-bounce" />
+              <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0.1s" }} />
+              <div className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0.2s" }} />
+            </div>
+          </div>
+        )}
       </div>
 
-      <div className="p-4 border-t border-sidebar-border">
+      <div className="p-4 border-t border-sidebar-border space-y-3">
+        <Input
+          value={emailInput}
+          onChange={(e) => setEmailInput(e.target.value)}
+          placeholder="Seu email..."
+          type="email"
+          disabled={isLoading}
+          className="bg-card border-border text-foreground placeholder:text-muted-foreground"
+        />
         <div className="flex items-center gap-2">
           <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+            onKeyDown={(e) => e.key === "Enter" && !isLoading && handleSend()}
             placeholder="Ask your agent something..."
-            className="flex-1 bg-card border-border text-foreground placeholder:text-muted-foreground"
+            disabled={isLoading}
+            className="flex-1 bg-card border-border text-foreground placeholder:text-muted-foreground disabled:opacity-50"
           />
           <Button
             onClick={handleSend}
             size="icon"
-            className="bg-primary text-primary-foreground hover:bg-primary/90"
+            disabled={isLoading}
+            className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
           >
-            <Send className="w-4 h-4" />
+            {isLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Send className="w-4 h-4" />
+            )}
           </Button>
         </div>
       </div>

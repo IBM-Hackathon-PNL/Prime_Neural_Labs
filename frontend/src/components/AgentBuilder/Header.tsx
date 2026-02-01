@@ -18,7 +18,7 @@ export const Header = () => {
         <div className="w-9 h-9 rounded-lg bg-primary/20 flex items-center justify-center">
           <Bot className="w-5 h-5 text-primary" />
         </div>
-        <span className="text-lg font-semibold text-foreground">Agent Factory</span>
+        <span className="text-lg font-semibold text-foreground">Prime Agents</span>
       </div>
 
       <div className="flex items-center gap-6">

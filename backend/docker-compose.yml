@@ -1,0 +1,21 @@
+
+services:
+  watsonx-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: watsonx-demo
+    ports:
+      - "8080:8080"
+    environment:
+      WATSONX_APIKEY: ${WATSONX_APIKEY}
+      WATSONX_PROJECT_ID: ${WATSONX_PROJECT_ID}
+      WATSONX_MODEL_ID: ${WATSONX_MODEL_ID}
+      WATSONX_ENDPOINT: ${WATSONX_ENDPOINT}
+    restart: unless-stopped
+    networks:
+      - watsonx-network
+
+networks:
+  watsonx-network:
+    driver: bridge

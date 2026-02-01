@@ -1,6 +1,6 @@
 /**
  * API Service - Frontend
- * Comunicação com backend Java para envio de prompts ao Watsonx
+ * Communication with Java backend for sending prompts to Watsonx
  */
 
 interface PromptResponse {
@@ -16,11 +16,11 @@ interface PromptRequest {
 }
 
 /**
- * Envia um prompt para o backend ser processado pela IA Watsonx
- * @param content - O texto/prompt a ser enviado
- * @param email - Email do usuário para notificação
- * @returns Resposta da IA Watsonx
- * @throws Error com mensagem amigável em caso de erro
+ * Sends a prompt to the backend to be processed by Watsonx AI
+ * @param content - The text/prompt to be sent
+ * @param email - User's email for notification
+ * @returns Response from Watsonx AI
+ * @throws Error with user-friendly message in case of failure
  */
 export async function sendPrompt(
   content: string,
@@ -37,16 +37,16 @@ export async function sendPrompt(
       body: JSON.stringify(payload),
     });
 
-    // Tratamento de erros HTTP
+    // HTTP error handling
     if (!response.ok) {
-      let errorMessage = "Erro ao enviar mensagem";
+      let errorMessage = "Failed to send message";
 
       if (response.status === 400) {
-        errorMessage = "Email inválido ou prompt vazio";
+        errorMessage = "Invalid email or empty prompt";
       } else if (response.status === 500) {
-        errorMessage = "Erro no servidor - tente novamente mais tarde";
+        errorMessage = "Server error - please try again later";
       } else if (response.status === 0) {
-        errorMessage = "Não foi possível conectar ao servidor";
+        errorMessage = "Could not connect to server";
       }
 
       throw new Error(errorMessage);
@@ -58,14 +58,14 @@ export async function sendPrompt(
     if (error instanceof Error) {
       throw error;
     }
-    throw new Error("Erro desconhecido ao conectar com o servidor");
+    throw new Error("Unknown error connecting to server");
   }
 }
 
 /**
- * Valida um endereço de email
- * @param email - Email a ser validado
- * @returns true se válido, false caso contrário
+ * Validates an email address
+ * @param email - Email to be validated
+ * @returns true if valid, false otherwise
  */
 export function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -73,9 +73,9 @@ export function isValidEmail(email: string): boolean {
 }
 
 /**
- * Valida um prompt/conteúdo
- * @param content - Conteúdo a ser validado
- * @returns true se válido, false caso contrário
+ * Validates prompt/content
+ * @param content - Content to be validated
+ * @returns true if valid, false otherwise
  */
 export function isValidPrompt(content: string): boolean {
   return content.trim().length > 0 && content.trim().length <= 5000;
